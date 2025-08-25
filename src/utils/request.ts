@@ -71,9 +71,9 @@ axios.interceptors.response.use(
     },
     (error) => {
         console.error(`err: ${error}`);
-        const res = error.response.data;
+        const res = error.response?.data;
         Message.error({
-            content: res.msg || '网络错误',
+            content: res?.msg || error.message || '网络错误',
             duration: 3000,
         });
         return Promise.reject(error);

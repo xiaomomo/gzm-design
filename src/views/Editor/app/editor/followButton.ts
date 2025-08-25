@@ -9,6 +9,7 @@ import IconfontAiSvg from '@/assets/icons/iconfont-ai.svg?raw'
 import {EditorEvent} from "@leafer-in/editor";
 import {IEventListener} from "@leafer-ui/interface";
 import {Message} from "@arco-design/web-vue";
+import {segmentImage} from "@/api/editor/segment";
 
 const baseHeight: number = 30
 const baseWidth: number = 30
@@ -51,8 +52,8 @@ export class FollowButton extends Disposable {
         const btnDelete = this.createBtn(Platform.toURL(IconfontDeleteSvg, 'svg'), function () {
             keybinding.trigger('del')
         })
-        const btnAi = this.createBtn(Platform.toURL(IconfontAiSvg, 'svg'), function () {
-            Message.warning('AI抠图还未开发，欢迎PR');
+        const btnAi = this.createBtn(Platform.toURL(IconfontAiSvg, 'svg'), async () => {
+            await this.handleAiSegmentation();
         })
         const aiSpt = btnSeparate.clone()
         btnBox.add(btnAi)
@@ -100,5 +101,68 @@ export class FollowButton extends Disposable {
                 tap: tapEvent,
             },
         })
+    }
+
+    private async handleAiSegmentation() {
+        let loadingMessage: any = null;
+        try {
+            // 获取当前选中的图片对象
+            const activeObject = this.canvas.getActiveObject();
+            if (!activeObject || !this.canvas.activeObjectIsType("Image", "Image2")) {
+                Message.warning('请先选择一个图片');
+                return;
+            }
+
+            loadingMessage = Message.loading('AI抠图处理中，请稍候...');
+            
+            // 获取图片URL
+            const imageUrl = (activeObject as any).url;
+            if (!imageUrl) {
+                Message.error('无法获取图片信息');
+                return;
+            }
+
+            // 从URL获取文件
+            const file = await this.urlToFile(imageUrl);
+            
+            // 调用分割API
+            const response = await segmentImage(file);
+            
+            if (response.data && response.data.code === 10000) {
+                const segmentedImageUrl = response.data.data;
+                
+                // 替换图片URL
+                (activeObject as any).url = segmentedImageUrl;
+                activeObject.forceRender();
+
+                Message.success('AI抠图完成！');
+            } else {
+                Message.error('AI抠图失败：' + (response.data?.message || '未知错误'));
+            }
+        } catch (error: any) {
+            console.error('AI抠图失败:', error);
+            let errorMessage = 'AI抠图失败，请重试';
+            
+            if (error.message === 'Network Error') {
+                errorMessage = '网络连接失败，请检查服务器是否启动（localhost:8080）';
+            } else if (error.response) {
+                errorMessage = `服务器错误：${error.response.status} ${error.response.data?.message || ''}`;
+            } else if (error.message) {
+                errorMessage = `请求失败：${error.message}`;
+            }
+            
+            Message.error(errorMessage);
+        } finally {
+            if (loadingMessage) {
+                loadingMessage.close();
+            }
+        }
+    }
+
+    private async urlToFile(url: string): Promise<File> {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const filename = url.split('/').pop() || 'image.jpg';
+        return new File([blob], filename, { type: blob.type });
     }
 }
