@@ -1,6 +1,6 @@
 <template>
     <a-space>
-        <a-button href="https://gitee.com/sourcenet/gzm-design"
+        <!-- <a-button href="https://gitee.com/sourcenet/gzm-design"
                   target="_blank"
                   type="text"
                   class="!underline underline-offset-5 p-l-5px p-r-5px">
@@ -11,7 +11,7 @@
                   type="text"
                   class="!underline underline-offset-5 p-l-5px p-r-5px">
             <ali-icon type="icon-github" class="mr3px text-size-18px"/>GitHub
-        </a-button>
+        </a-button> -->
 
         <a-divider direction="vertical" />
 

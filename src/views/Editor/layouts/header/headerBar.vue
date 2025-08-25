@@ -2,10 +2,10 @@
     <div class="header-box">
         <div class="flex items-center h-40px px-2 header-bar">
             <div class="flex-1 flex items-center">
-                <img src="/logo.png" style="width: 25px"/>
+                <!-- <img src="/logo.png" style="width: 25px"/> -->
                 <div class="text-center px-5px">
                     <div style="width: max-content">
-                        <span class="black font-bold">果米设计</span>
+                        <span class="black font-bold">哪吒来了</span>
                     </div>
                 </div>
                 <a-divider direction="vertical"/>
