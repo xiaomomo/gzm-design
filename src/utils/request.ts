@@ -54,7 +54,7 @@ axios.interceptors.response.use(
 
         // 操作成功则直接返回
         const res = response.data;
-        if (res.success) {
+        if (res.success || res.code === 200 || res.code === 10000) {
             return res;
         }
         // 操作失败，弹出错误提示

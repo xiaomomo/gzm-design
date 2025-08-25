@@ -128,16 +128,41 @@ export class FollowButton extends Disposable {
             // 调用分割API
             const response = await segmentImage(file);
             
-            if (response.data && response.data.code === 10000) {
-                const segmentedImageUrl = response.data.data;
+            console.log('=== AI抠图响应数据调试 ===');
+            console.log('完整响应:', response);
+            console.log('response.data:', response.data);
+            console.log('response.data类型:', typeof response.data);
+            console.log('===========================');
+            
+            // 修正：response.data 现在直接就是图片URL字符串
+            if (response.data && typeof response.data === 'string') {
+                const segmentedImageUrl = response.data;
+                console.log('AI抠图成功，新图片URL:', segmentedImageUrl);
+                console.log('当前activeObject:', activeObject);
                 
-                // 替换图片URL
-                (activeObject as any).url = segmentedImageUrl;
-                activeObject.forceRender();
-
-                Message.success('AI抠图完成！');
+                // 更新图片URL，添加时间戳避免缓存问题
+                const urlWithTimestamp = segmentedImageUrl + (segmentedImageUrl.includes('?') ? '&' : '?') + `t=${Date.now()}`;
+                
+                try {
+                    // 替换图片URL
+                    (activeObject as any).url = urlWithTimestamp;
+                    
+                    // 等待图片加载完成后强制渲染
+                    setTimeout(() => {
+                        activeObject.forceRender();
+                        // 尝试强制重绘整个画布
+                        this.canvas.forceRender();
+                        console.log('图片URL已更新并强制渲染');
+                    }, 100);
+                    
+                    Message.success('AI抠图完成！');
+                } catch (error) {
+                    console.error('更新图片失败:', error);
+                    Message.error('图片更新失败');
+                }
             } else {
-                Message.error('AI抠图失败：' + (response.data?.message || '未知错误'));
+                console.error('AI抠图失败，响应数据格式不正确:', response);
+                Message.error('AI抠图失败：响应数据格式错误');
             }
         } catch (error: any) {
             console.error('AI抠图失败:', error);
